@@ -1,0 +1,150 @@
+# LinuC 3SS lab-net — Compose v2 (compose.yml)
+# See 1_環境設計/LAB_SPEC.md
+
+networks:
+  labnet:
+    driver: bridge
+    ipam:
+      config:
+        - subnet: 172.28.0.0/24
+
+volumes:
+  step_ca_data:
+
+services:
+  dns:
+    image: internetsystemsconsortium/bind9:9.18
+    profiles: [smoke, ch04, ch05, ch06]
+    networks:
+      labnet:
+        ipv4_address: 172.28.0.2
+    ports:
+      - "127.0.0.1:1053:53/tcp"
+      - "127.0.0.1:1053:53/udp"
+    volumes:
+      - ./bind/named.conf:/etc/bind/named.conf:ro
+      - ./bind/zones:/etc/bind/zones:ro
+    healthcheck:
+      test: ["CMD-SHELL", "dig @127.0.0.1 lab.3ss.local SOA +tcp +time=2 +tries=1 >/dev/null 2>&1"]
+      interval: 5s
+      timeout: 3s
+      retries: 6
+      start_period: 10s
+
+  web:
+    image: nginx:1.27-alpine
+    profiles: [smoke, ch04, ch05, ch06]
+    dns:
+      - 172.28.0.2
+    networks:
+      labnet:
+        ipv4_address: 172.28.0.3
+    ports:
+      - "${LAB_WEB_BIND:-127.0.0.1}:18080:80"
+      - "${LAB_WEB_BIND:-127.0.0.1}:18443:443"
+    volumes:
+      - ./web/html:/usr/share/nginx/html:ro
+      - ./web/nginx.conf:/etc/nginx/nginx.conf:ro
+      - ./certs:/etc/nginx/certs:ro
+    depends_on:
+      dns:
+        condition: service_healthy
+    healthcheck:
+      test: ["CMD-SHELL", "wget -qO- http://127.0.0.1/ | grep -q LinuC-3SS-smoke"]
+      interval: 5s
+      timeout: 3s
+      retries: 6
+      start_period: 5s
+
+  ca:
+    image: smallstep/step-ca:latest
+    profiles: [ch04, ch05, ch06]
+    dns:
+      - 172.28.0.2
+    extra_hosts:
+      - "ca.lab.3ss.local:127.0.0.1"
+    networks:
+      labnet:
+        ipv4_address: 172.28.0.10
+    ports:
+      - "127.0.0.1:19000:9000"
+    environment:
+      DOCKER_STEPCA_INIT_NAME: "LinuC 3SS Lab CA"
+      DOCKER_STEPCA_INIT_DNS_NAMES: "ca.lab.3ss.local,localhost"
+      DOCKER_STEPCA_INIT_REMOTE_MANAGEMENT: "true"
+      DOCKER_STEPCA_INIT_ACME: "true"
+      DOCKER_STEPCA_INIT_PASSWORD: "lab-ca-password"
+    volumes:
+      - step_ca_data:/home/step
+    depends_on:
+      dns:
+        condition: service_healthy
+    healthcheck:
+      test: ["CMD-SHELL", "step ca health >/dev/null 2>&1"]
+      interval: 5s
+      timeout: 5s
+      retries: 12
+      start_period: 15s
+
+  keycloak:
+    image: quay.io/keycloak/keycloak:24.0.5
+    profiles: [ch05]
+    command: start-dev
+    dns:
+      - 172.28.0.2
+    networks:
+      labnet:
+        ipv4_address: 172.28.0.11
+    ports:
+      - "127.0.0.1:18081:8080"
+    environment:
+      KEYCLOAK_ADMIN: admin
+      KEYCLOAK_ADMIN_PASSWORD: lab-keycloak-password
+      KC_HEALTH_ENABLED: "true"
+      KC_HTTP_ENABLED: "true"
+      KC_HOSTNAME: 127.0.0.1
+      KC_HOSTNAME_PORT: 18081
+      KC_HOSTNAME_STRICT: "false"
+      KC_HOSTNAME_STRICT_HTTPS: "false"
+    depends_on:
+      dns:
+        condition: service_healthy
+    healthcheck:
+      test: ["CMD-SHELL", "exec 3<>/dev/tcp/127.0.0.1/8080 && printf 'GET /health/ready HTTP/1.1\\r\\nHost: localhost\\r\\n\\r\\n' >&3 && head -n1 <&3 | grep -q '200'"]
+      interval: 10s
+      timeout: 5s
+      retries: 18
+      start_period: 45s
+
+  grafana:
+    image: grafana/grafana:11.2.0
+    profiles: [ch05]
+    dns:
+      - 172.28.0.2
+    networks:
+      labnet:
+        ipv4_address: 172.28.0.12
+    ports:
+      - "127.0.0.1:13000:3000"
+    environment:
+      GF_SECURITY_ADMIN_USER: admin
+      GF_SECURITY_ADMIN_PASSWORD: lab-grafana-admin
+      GF_SERVER_ROOT_URL: http://127.0.0.1:13000/
+      GF_AUTH_GENERIC_OAUTH_ENABLED: "true"
+      GF_AUTH_GENERIC_OAUTH_NAME: Keycloak
+      GF_AUTH_GENERIC_OAUTH_ALLOW_SIGN_UP: "true"
+      GF_AUTH_GENERIC_OAUTH_CLIENT_ID: grafana
+      GF_AUTH_GENERIC_OAUTH_CLIENT_SECRET: lab-grafana-secret
+      GF_AUTH_GENERIC_OAUTH_SCOPES: openid email profile
+      GF_AUTH_GENERIC_OAUTH_AUTH_URL: http://127.0.0.1:18081/realms/lab/protocol/openid-connect/auth
+      GF_AUTH_GENERIC_OAUTH_TOKEN_URL: http://keycloak:8080/realms/lab/protocol/openid-connect/token
+      GF_AUTH_GENERIC_OAUTH_API_URL: http://keycloak:8080/realms/lab/protocol/openid-connect/userinfo
+    depends_on:
+      keycloak:
+        condition: service_healthy
+    healthcheck:
+      test: ["CMD-SHELL", "wget -qO- http://127.0.0.1:3000/api/health | grep -q ok"]
+      interval: 5s
+      timeout: 3s
+      retries: 12
+      start_period: 20s

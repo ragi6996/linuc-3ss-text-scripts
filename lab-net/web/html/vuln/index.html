@@ -1,0 +1,19 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+  <meta charset="utf-8">
+  <title>LinuC 3SS Vuln Lab Target</title>
+</head>
+<body>
+  <h1>LinuC-3SS-vuln-target</h1>
+  <p>Intentionally weak page for security scanning exercises (6.3 / 6.8).</p>
+  <form action="/vuln/search" method="GET">
+    <label>Search: <input type="text" name="q" value=""></label>
+    <button type="submit">Go</button>
+  </form>
+  <script>
+    var q = new URLSearchParams(window.location.search).get('q');
+    if (q) { document.write('<p>Results for: ' + q + '</p>'); }
+  </script>
+</body>
+</html>

@@ -1,0 +1,21 @@
+$TTL 300
+@   IN SOA ns.lab.3ss.local. admin.lab.3ss.local. (
+        2025063006 ; serial
+        3600       ; refresh
+        1800       ; retry
+        604800     ; expire
+        300        ; minimum
+)
+
+    IN NS  ns.lab.3ss.local.
+    IN TXT "v=spf1 -all"
+    IN A   172.28.0.3
+
+ns      IN A     172.28.0.2
+www     IN A     172.28.0.3
+ca        IN A     172.28.0.10
+keycloak  IN A     172.28.0.11
+grafana   IN A     172.28.0.12
+
+default._domainkey IN TXT "v=DKIM1; k=rsa; p=MIIBIjANBgkqhkiG9w0BAQEFAAOCAQ8AMIIBCgKCAQEA0Z3VS5JJcds3xfn/ygWy7"
+_dmarc  IN TXT   "v=DMARC1; p=none; rua=mailto:dmarc@lab.3ss.local"
