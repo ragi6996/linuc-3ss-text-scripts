@@ -8,7 +8,7 @@ source "${SCRIPT_DIR}/../lib/lab-dir.sh"
 LAB_DIR="$(lab_dir_from_script "$0")"
 cd "$LAB_DIR"
 
-"${LAB_DIR}/scripts/teardown/down-lab-net.sh"
+"${SCRIPT_DIR}/down-lab-net.sh"
 
 CERT_DIR="${LAB_DIR}/certs"
 mkdir -p "${CERT_DIR}"

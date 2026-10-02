@@ -56,6 +56,37 @@ services:
       retries: 6
       start_period: 5s
 
+  # OWASP CRS (ModSecurity) in front of web — chapter 6.1 lab
+  # Host :18082 → waf:8080 → web:80. Default engine is DetectionOnly (override via MODSEC_RULE_ENGINE).
+  waf:
+    image: owasp/modsecurity-crs:nginx-alpine
+    profiles: [ch06]
+    dns:
+      - 172.28.0.2
+    networks:
+      labnet:
+        ipv4_address: 172.28.0.13
+    ports:
+      - "${LAB_WEB_BIND:-127.0.0.1}:18082:8080"
+    environment:
+      PORT: "8080"
+      SERVER_NAME: localhost
+      BACKEND: http://web:80
+      MODSEC_RULE_ENGINE: ${MODSEC_RULE_ENGINE:-DetectionOnly}
+      BLOCKING_PARANOIA: "1"
+      ANOMALY_INBOUND: "5"
+      ANOMALY_OUTBOUND: "4"
+      NGINX_ALWAYS_TLS_REDIRECT: "off"
+    depends_on:
+      web:
+        condition: service_healthy
+    healthcheck:
+      test: ["CMD", "wget", "-qO-", "http://127.0.0.1:8080/healthz"]
+      interval: 5s
+      timeout: 3s
+      retries: 8
+      start_period: 20s
+
   ca:
     image: smallstep/step-ca:latest
     profiles: [ch04, ch05, ch06]
