@@ -85,9 +85,9 @@ else
   note "ip -4 -o addr で確認できます。VirtualBox ならホストオンリーアダプターを 2 枚目の NIC として有効にします"
 fi
 
-nics_up="$(ip -o link show up | awk -F': ' '$2 != "lo" {print $2}' | wc -l)"
-[ "$nics_up" -ge 2 ] && ok "有効な NIC: ${nics_up} 枚（NAT とホストオンリー）" \
-  || warn "有効な NIC が ${nics_up} 枚です。NAT のみだと 2 台が相互に接続できません"
+nics_up="$(ip -4 -o addr show up scope global | awk '$2 !~ /^(docker|br-|veth|virbr|cni|podman)/ {print $2}' | sort -u | wc -l)"
+[ "$nics_up" -ge 2 ] && ok "IPv4 アドレスを持つ有効な NIC: ${nics_up} 枚（NAT とホストオンリー）" \
+  || warn "IPv4 アドレスを持つ有効な NIC が ${nics_up} 枚です。NAT のみだと 2 台が相互に接続できません"
 
 peer_line="$(grep -E "(^|[[:space:]])${PEER}([[:space:]]|\$)" /etc/hosts | head -1 || true)"
 if [ -n "$peer_line" ]; then
@@ -187,8 +187,12 @@ if [ -d "${scripts_dir}/ch05" ] && [ -d "${scripts_dir}/lib" ]; then
 else
   fail "スクリプトの構成が想定と異なります: ${scripts_dir}"
 fi
-nonexec="$(find "$scripts_dir" -name '*.sh' ! -perm -u+x -not -path '*/.git/*' | head -3)"
-[ -z "$nonexec" ] && ok "*.sh に実行権があります" || warn "実行権のない *.sh があります（bash <ファイル> で実行するか、chmod +x してください）: $nonexec"
+n_nonexec="$(find "$scripts_dir" -name '*.sh' ! -perm -u+x -not -path '*/.git/*' | wc -l)"
+if [ "$n_nonexec" -eq 0 ]; then
+  ok "*.sh に実行権があります"
+else
+  warn "実行権のない *.sh が ${n_nonexec} 本あります（bash <ファイル> で実行するか、find ${scripts_dir} -name '*.sh' -exec chmod +x {} + を実行してください）"
+fi
 
 echo
 echo "== 結果: FAIL ${n_fail} / WARN ${n_warn} =="
