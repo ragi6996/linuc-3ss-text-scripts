@@ -103,9 +103,9 @@ freeipa_preflight() {
   fi
 
   echo "==> listeners"
-  ss -lntu | awk 'NR==1 || $5 ~ /:(88|464|8080|8389|8443|8636)$/' || true
-  if ss -lntu | awk 'NR>1 {print $5}' | grep -Eq ':(88|464|8080|8389|8443|8636)$'; then
-    freeipa_fail "a FreeIPA port is already in use (88, 464, 8080, 8389, 8443, or 8636)"
+  ss -lntup | awk 'NR==1 || $5 ~ /:(80|88|389|443|464|636)$/' || true
+  if ss -lntu | awk 'NR>1 {print $5}' | grep -Eq ':(80|88|389|443|464|636)$'; then
+    freeipa_fail "a FreeIPA port is already in use (80, 88, 389, 443, 464, or 636). If httpd is running (chapter 1), stop it: systemctl stop httpd"
     return 1
   fi
 
@@ -293,8 +293,8 @@ freeipa_start_container_once() {
     --sysctl net.ipv6.conf.lo.disable_ipv6=0 \
     --sysctl net.ipv6.conf.all.disable_ipv6=0 \
     -v "${data}:/data:Z" \
-    -p 8443:443 -p 8080:80 \
-    -p 8389:389 -p 8636:636 \
+    -p 443:443 -p 80:80 \
+    -p 389:389 -p 636:636 \
     -p 88:88 -p 464:464 \
     -p 88:88/udp -p 464:464/udp \
     -e PASSWORD=lab-freeipa-password \
