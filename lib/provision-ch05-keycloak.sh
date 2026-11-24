@@ -10,15 +10,15 @@ cd "$LAB_DIR"
 # shellcheck source=guest-lib.sh
 source "${SCRIPT_DIR}/guest-lib.sh"
 
-KC_ADMIN="${KC_ADMIN:-admin}"
-KC_PASS="${KC_PASS:-lab-keycloak-password}"
-REALM="${REALM:-lab}"
-CLIENT_ID="${CLIENT_ID:-grafana}"
-CLIENT_SECRET="${CLIENT_SECRET:-lab-grafana-secret}"
-LAB_USER="${LAB_USER:-labuser}"
-LAB_USER_PASS="${LAB_USER_PASS:-lab-user-password}"
-KC_URL_HOST="${KC_URL_HOST:-http://127.0.0.1:18081}"
-KC_URL_CONTAINER="${KC_URL_CONTAINER:-http://localhost:8080}"
+KC_ADMIN=admin
+KC_PASS=lab-keycloak-password
+REALM=lab
+CLIENT_ID=grafana
+CLIENT_SECRET=lab-grafana-secret
+LAB_USER=labuser
+LAB_USER_PASS=lab-user-password
+KC_URL_HOST=http://127.0.0.1:18081
+KC_URL_CONTAINER=http://localhost:8080
 
 fail() { echo "FAIL: $*" >&2; exit 1; }
 

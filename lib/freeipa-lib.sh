@@ -236,7 +236,7 @@ freeipa_start_container_once() {
   local data name image status
   data="$(freeipa_data_dir)"
   name="$(freeipa_container_name)"
-  image="${FREEIPA_IMAGE:-docker.io/freeipa/freeipa-server:almalinux-10}"
+  image=docker.io/freeipa/freeipa-server:almalinux-10
   if ! freeipa_check_stack; then
     return 1
   fi

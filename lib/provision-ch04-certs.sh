@@ -10,9 +10,9 @@ cd "$LAB_DIR"
 # shellcheck source=guest-lib.sh
 source "${SCRIPT_DIR}/guest-lib.sh"
 
-STEP_CA_PASSWORD="${STEP_CA_PASSWORD:-lab-ca-password}"
+STEP_CA_PASSWORD=lab-ca-password
 CERT_DIR="${LAB_DIR}/certs"
-CN="${CERT_CN:-www.lab.3ss.local}"
+CN=www.lab.3ss.local
 
 mkdir -p "${CERT_DIR}"
 

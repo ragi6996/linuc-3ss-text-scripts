@@ -11,6 +11,9 @@ cd "${LAB_NET_DIR}"
 # shellcheck source=../lib/guest-lib.sh
 source "${SCRIPT_DIR}/../lib/guest-lib.sh"
 
+# 実習6-3 で AlmaLinux から Debian の Web（:18080）へ届く必要があるため、全インターフェースで公開する。
+export LAB_WEB_BIND=0.0.0.0
+
 vm_compose --profile ch06 up -d dns ca
 sleep 12
 "${SCRIPTS_DIR}/lib/provision-ch04-certs.sh"
