@@ -22,6 +22,6 @@ if [[ "${BASH_SOURCE[0]}" == "${0}" ]]; then
   SCRIPT_DIR="$(cd "$(dirname "$0")" && pwd)"
   # shellcheck source=lab-dir.sh
   source "${SCRIPT_DIR}/lab-dir.sh"
-  LAB_DIR="$(lab_dir_from_script "$0")"
+  LAB_DIR="$(lab_net_dir_from_script "$0")"
   ensure_nginx_certs "${LAB_DIR}/certs"
 fi

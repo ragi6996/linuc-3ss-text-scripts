@@ -5,7 +5,7 @@ set -euo pipefail
 SCRIPT_DIR="$(cd "$(dirname "$0")" && pwd)"
 # shellcheck source=../lib/lab-dir.sh
 source "${SCRIPT_DIR}/../lib/lab-dir.sh"
-LAB_DIR="$(lab_dir_from_script "$0")"
+LAB_DIR="$(lab_net_dir_from_script "$0")"
 cd "$LAB_DIR"
 
 "${SCRIPT_DIR}/down-lab-net.sh"
