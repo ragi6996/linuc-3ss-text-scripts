@@ -133,12 +133,9 @@ if [ "$CHECK_NET" -eq 1 ]; then
   fi
 fi
 
-echo "-- ログイン・SSH（クラウドイメージ由来の VM では既定値が異なります）"
+echo "-- ログイン・SSH"
 if [ -d /etc/cloud ] || command -v cloud-init >/dev/null 2>&1; then
-  warn "cloud-init が入っています（クラウドイメージ由来の VM の可能性）。本書はインストーラ（ISO）で作成した VM を想定しています"
-  note "既定値の違い: sshd のパスワード認証が無効、/etc/hosts や hostname を cloud-init が再生成、firewalld・man などの有無"
-else
-  ok "cloud-init は入っていません（インストーラ由来の VM）"
+  warn "cloud-init が入っています（クラウドイメージ由来の VM）。本書はインストーラ（ISO）で作成した VM が前提です"
 fi
 
 if command -v sshd >/dev/null 2>&1; then
