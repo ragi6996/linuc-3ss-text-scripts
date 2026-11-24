@@ -151,6 +151,8 @@ freeipa_wait_ready() {
       if freeipa_cmd logs "${name}" 2>&1 | grep -qE 'FreeIPA server (configured|started)\.' \
         && freeipa_cmd exec "${name}" bash -c \
           'echo lab-freeipa-password | kinit admin >/dev/null 2>&1 && ipa config-show >/dev/null' 2>/dev/null; then
+        # 成功判定の直後に ipa サービスの再起動が走ってコンテナが落ちる回が、測定中に 1 度あった
+        # （kinit が通った数秒後に Exited 123）。落ちないことを 5 秒待って確かめる。
         sleep 5
         if [[ "$(freeipa_cmd inspect -f '{{.State.Status}}' "${name}" 2>/dev/null)" == running ]]; then
           echo "    OK: FreeIPA ready (${elapsed}s)"
@@ -172,6 +174,10 @@ freeipa_wait_ready() {
       freeipa_dump
       return 1
     fi
+    # 10 秒おきに確認する。FreeIPA の初回構築（podman run から ready まで）を、KVM（2 vCPU・RAM 4GB）で
+    # 複数回測定して正常系の完了時間を調べた。AlmaLinux 10 イメージで 190〜210 秒、9 イメージでも
+    # 180〜198 秒で、差はない。これに対して全体の上限 600 秒は約 3 倍、ログ無更新の上限 240 秒は
+    # 測定した最長の無更新（124〜129 秒）の約 2 倍にしている。
     sleep 10
     elapsed=$((elapsed + 10))
   done
