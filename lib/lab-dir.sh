@@ -12,8 +12,3 @@ scripts_dir_from_script() {
 lab_net_dir_from_script() {
   printf '%s\n' "${_SCRIPTS_ROOT}/lab-net"
 }
-
-# Compose 作業ディレクトリ（第4章以降の lab-net）
-lab_dir_from_script() {
-  lab_net_dir_from_script "$@"
-}
